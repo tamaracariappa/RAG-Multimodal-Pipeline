@@ -1,0 +1,53 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+build/
+dist/
+
+# Chroma / vector stores
+chroma/
+chroma_db/
+.chroma/
+*.sqlite3
+chroma.sqlite3
+
+# Extracted assets from PDF parsing
+content/
+figures/
+extracted_images/
+images/
+*.png
+*.jpg
+*.jpeg
+!docs/**/*.png
+*.pdf
+
+# Caches
+.cache/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+nltk_data/
+
+# Model / HF caches if redirected into the project
+.hf_cache/
+models/
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

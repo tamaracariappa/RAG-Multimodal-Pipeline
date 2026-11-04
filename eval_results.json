@@ -1,0 +1,278 @@
+{
+  "pdf": "D:\\MultimodalRAG\\attention.pdf",
+  "models": {
+    "embedding": "sentence-transformers/all-MiniLM-L6-v2",
+    "answer": "gemini-flash-lite-latest"
+  },
+  "extraction": {
+    "extractor": "pymupdf",
+    "chunk_chars": 1000,
+    "chunk_overlap": 150,
+    "caption_chars": 400
+  },
+  "fingerprint": "5f33e6ae0d4cd836",
+  "ingest": {
+    "source_id": "attention.pdf",
+    "indexed": 46,
+    "reused": 0,
+    "deleted": 46,
+    "orphans_removed": 0,
+    "skipped": false
+  },
+  "results": [
+    {
+      "id": "Q1",
+      "scenario": "Exact fact (body text)",
+      "question": "What BLEU score does the big transformer model achieve on the WMT 2014 English-to-German translation task?",
+      "truth": "28.4 (page 8, Table 2 and surrounding text)",
+      "answer": "Based on the provided evidence, the big transformer model achieves a BLEU score of 28.4 on the WMT 2014 English-to-German translation task (attention.pdf, p. 8).",
+      "grade": {
+        "passed": true,
+        "matched": [
+          "28\\.4"
+        ],
+        "missed": [],
+        "tripped": []
+      },
+      "sources": [
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 8,
+          "chars": 927,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 8,
+          "chars": 920,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "tables",
+          "content_type": "table",
+          "source": "attention.pdf",
+          "page_number": 8,
+          "chars": 746,
+          "has_html_grid": true
+        },
+        {
+          "bucket": "tables",
+          "content_type": "table",
+          "source": "attention.pdf",
+          "page_number": 9,
+          "chars": 941,
+          "has_html_grid": true
+        }
+      ],
+      "seconds": 1.9
+    },
+    {
+      "id": "Q2",
+      "scenario": "Table 3 row alignment (OCR stress test)",
+      "question": "According to Table 3, what is the BLEU (dev) score for the base model where dk is reduced to 16?",
+      "truth": "25.1 - Table 3 row (B), dk=16, PPL 5.16, 58M params (page 9)",
+      "answer": "Based on the provided evidence, the table does not contain the BLEU (dev) score for the base model where $d_k$ is reduced to 16.",
+      "grade": {
+        "passed": false,
+        "matched": [],
+        "missed": [
+          "25\\.1"
+        ],
+        "tripped": []
+      },
+      "sources": [
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 8,
+          "chars": 927,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 8,
+          "chars": 279,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "tables",
+          "content_type": "table",
+          "source": "attention.pdf",
+          "page_number": 9,
+          "chars": 941,
+          "has_html_grid": true
+        },
+        {
+          "bucket": "tables",
+          "content_type": "table",
+          "source": "attention.pdf",
+          "page_number": 8,
+          "chars": 746,
+          "has_html_grid": true
+        }
+      ],
+      "seconds": 1.7
+    },
+    {
+      "id": "Q3",
+      "scenario": "Figure 1 (image evidence)",
+      "question": "Based on Figure 1, what component immediately follows the Multi-Head Attention layer in the encoder stack?",
+      "truth": "Add & Norm (residual connection followed by layer normalisation)",
+      "answer": "Based on Figure 1, the component that immediately follows the first \"Multi-Head Attention\" layer in the encoder stack is the \"Add & Norm\" box (`attention.pdf`, page 3).",
+      "grade": {
+        "passed": true,
+        "matched": [
+          "add\\s*&\\s*norm|add\\s+and\\s+norm|layer\\s*norm|residual"
+        ],
+        "missed": [],
+        "tripped": []
+      },
+      "sources": [
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 2,
+          "chars": 940,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 3,
+          "chars": 869,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "images",
+          "content_type": "image",
+          "source": "attention.pdf",
+          "page_number": 3,
+          "chars": 3724,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "images",
+          "content_type": "image",
+          "source": "attention.pdf",
+          "page_number": 4,
+          "chars": 1274,
+          "has_html_grid": false
+        }
+      ],
+      "seconds": 2.4
+    },
+    {
+      "id": "Q4",
+      "scenario": "Missing information (abstention)",
+      "question": "What was the total cost in US dollars to train the big transformer model on the 8 P100 GPUs?",
+      "truth": "Not in the paper. Correct behaviour is to abstain.",
+      "answer": "Based on the provided evidence, the text states that training the big transformer model took 3.5 days on 8 P100 GPUs (attention.pdf, p. 8), but the evidence does not contain information about the cost in US dollars.",
+      "grade": {
+        "passed": true,
+        "matched": [
+          "(does not|doesn'?t|do not|don'?t|cannot|can'?t|could not|couldn'?t|is not|isn'?t|was not|wasn'?t|no |not )\\s*\\w*\\s*(contain|provide|specify|state|mention|include|report|give|given|available|present|found|information|data|figure|cost)"
+        ],
+        "missed": [],
+        "tripped": []
+      },
+      "sources": [
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 8,
+          "chars": 927,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 8,
+          "chars": 991,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 2,
+          "chars": 951,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "tables",
+          "content_type": "table",
+          "source": "attention.pdf",
+          "page_number": 8,
+          "chars": 746,
+          "has_html_grid": true
+        }
+      ],
+      "seconds": 2.0
+    },
+    {
+      "id": "Q5",
+      "scenario": "Multi-part extraction (formula generalisation)",
+      "question": "What optimizer and specific learning rate schedule formula were used for training?",
+      "truth": "Adam (beta1=0.9, beta2=0.98, eps=1e-9); lrate = d_model^-0.5 * min(step_num^-0.5, step_num * warmup_steps^-1.5), warmup_steps = 4000",
+      "answer": "Based on the provided evidence, the optimizer used was the Adam optimizer with $\\beta_1 = 0.9$, $\\beta_2 = 0.98$, and $\\epsilon = 10^{-9}$ (attention.pdf, p. 7). \n\nThe specific learning rate schedule formula used was:\n$$\\text{lrate} = d_{\\text{model}}^{-0.5} \\cdot \\min(\\text{step\\_num}^{-0.5}, \\text{step\\_num} \\cdot \\text{warmup\\_steps}^{-1.5})$$\n(attention.pdf, p. 7). \n\nThis corresponds to increasing the learning rate linearly for the first `warmup_steps` (with `warmup_steps = 4000`) training steps, and decreasing it thereafter proportionally to the inverse square root of the step number (attention.pdf, p. 7).",
+      "grade": {
+        "passed": true,
+        "matched": [
+          "\\badam\\b",
+          "warm[\\s-]?up",
+          "4[,.]?000\\b",
+          "\\bd[\\s_{-]*\\\\?(?:text|mathrm)?\\{?model",
+          "\\bmin\\b|inverse square root"
+        ],
+        "missed": [],
+        "tripped": []
+      },
+      "sources": [
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 7,
+          "chars": 972,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 7,
+          "chars": 739,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "texts",
+          "content_type": "text",
+          "source": "attention.pdf",
+          "page_number": 8,
+          "chars": 279,
+          "has_html_grid": false
+        },
+        {
+          "bucket": "tables",
+          "content_type": "table",
+          "source": "attention.pdf",
+          "page_number": 6,
+          "chars": 528,
+          "has_html_grid": true
+        }
+      ],
+      "seconds": 2.1
+    }
+  ]
+}

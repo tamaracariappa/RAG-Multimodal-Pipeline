@@ -1,0 +1,36 @@
+# Multimodal RAG - local Windows 11 / Python 3.11 environment
+# Install:  .venv\Scripts\pip install -r requirements.txt
+# No system prerequisites: PyMuPDF ships its own renderer, so the Poppler and
+# Tesseract binaries the old hi_res stack needed are gone (see SETUP.md).
+
+# --- PDF extraction -------------------------------------------------------
+# Replaces the whole unstructured hi_res stack (unstructured,
+# unstructured-inference, unstructured-pytesseract, pdf2image, pdfminer.six,
+# pikepdf, pypdf, pi-heif). One wheel, no layout model, no external binary,
+# and it reads text blocks, table grids and image positions straight out of
+# the structures the PDF already carries. Import name is `pymupdf`; the old
+# `fitz` alias was dropped in 2.x.
+pymupdf>=2.0.0
+
+# --- LangChain ------------------------------------------------------------
+# MultiVectorRetriever / InMemoryStore moved to langchain-classic in 1.x,
+# Chroma moved out to langchain-chroma.
+langchain-classic>=1.0.0
+langchain-chroma>=1.0.0
+# RecursiveCharacterTextSplitter: chunking now happens here, not in the
+# extractor. Already pulled in by langchain-classic, pinned so it is explicit.
+langchain-text-splitters>=1.0.0
+# Local CPU embeddings: no API key, no per-call cost. Replaces
+# langchain-openai, which the pipeline no longer imports.
+langchain-huggingface>=1.2.3
+sentence-transformers>=6.2.0
+# Gemini: native vision for figure summaries at ingest and the answer /
+# relevance-grading calls, on a 1M TPM free tier. Replaces langchain-groq,
+# whose 8k TPM made a per-figure call impossible.
+langchain-google-genai>=4.0.0
+
+# --- Supporting -----------------------------------------------------------
+python-dotenv>=1.0.0
+ipython>=8.0.0             # the notebook runs the pipeline interactively
+# Dropped with the unstructured stack: tiktoken, pillow and lxml were only
+# ever pulled in for OCR and HTML table inference.
