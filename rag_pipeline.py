@@ -130,6 +130,9 @@ EXTRACTOR = "pymupdf"
 # Vector-drawing extraction settings
 VECTOR_DRAWING_VERSION = "clustered-vector-v1"
 
+#: Bumped so already-ingested PDFs are re-extracted without their blank images.
+RASTER_FILTER_VERSION = "skip-blank-v1"
+
 VECTOR_DRAWING_DPI = int(os.getenv("VECTOR_DRAWING_DPI", "180"))
 
 # Ignore very small decorative paths and isolated lines.
@@ -256,6 +259,7 @@ def ingestion_fingerprint() -> str:
     payload = {
         "record_config": config_fingerprint(),
         "vector_drawing_version": VECTOR_DRAWING_VERSION,
+        "raster_filter_version": RASTER_FILTER_VERSION,
     }
     return _sha256(json.dumps(payload, sort_keys=True))[:16]
 
@@ -507,6 +511,35 @@ def _lead_in(blocks: Sequence[Any], y: float, caption_chars: int) -> str:
     return "".join(b[_BLOCK_TEXT] for b in blocks if b[_BLOCK_Y0] < y)[-caption_chars:]
 
 
+def _is_blank(document: Any, xref: int) -> bool:
+    """True when an image and its soft mask are each a single flat value.
+
+    Such an image is a spacer or overlay, not a figure: BCS703 places a black,
+    fully transparent 1009x166 one on every page, and each placement was
+    indexed under the caption of the real figure beside it. The soft mask is
+    checked on its own because ``Pixmap(document, xref)`` does not apply it,
+    and black ink whose shape lives only in the mask is a real figure. Images
+    with a hard /Mask, or that cannot be decoded here, are kept, as before.
+
+    ponytail: exact match only, so a near-blank JPEG (compression noise) still
+    gets indexed. Compare against a tolerance if those show up.
+    """
+    import pymupdf
+
+    def flat(image_xref: int) -> bool:
+        pixmap = pymupdf.Pixmap(document, image_xref)
+        samples = pixmap.samples
+        return samples == samples[: pixmap.n] * (pixmap.width * pixmap.height)
+
+    try:
+        if document.xref_get_key(xref, "Mask")[0] != "null":
+            return False
+        kind, smask = document.xref_get_key(xref, "SMask")
+        return flat(xref) and (kind == "null" or flat(int(smask.split()[0])))
+    except Exception:
+        return False
+
+
 def _page_images(
     page: Any,
     blocks: Sequence[Any],
@@ -532,6 +565,8 @@ def _page_images(
         if xref in seen:
             continue
         seen.add(xref)
+        if _is_blank(page.parent, xref):
+            continue
         top, bottom = info["bbox"][1], info["bbox"][3]
         after = "".join(b[_BLOCK_TEXT] for b in blocks if b[_BLOCK_Y0] >= bottom)
         caption = _squash(
@@ -661,11 +696,9 @@ def _page_vector_drawings(
     return records
 
 
-def figure_image_bytes(
-    document: Any,
-    record: dict[str, Any],
-) -> tuple[bytes, str]:
-    """Return image bytes and MIME type for either raster or vector figures."""
+def figure_image_bytes(document, record):
+    """Return image bytes and MIME type for raster or vector figures."""
+    import pymupdf
 
     if record.get("extraction_method") == "vector_drawing":
         page = document[int(record["page_number"]) - 1]
@@ -678,18 +711,46 @@ def figure_image_bytes(
 
         return png_bytes, "image/png"
 
-    # Existing raster-image path.
-    extracted = document.extract_image(record["xref"])
+    # Extract raster image
+    xref = record.get("xref")
+    if xref is None:
+        raise ValueError(f"Raster figure record has no xref: {record}")
+
+    extracted = document.extract_image(xref)
+    image_bytes = extracted["image"]
+
+    # Apply transparency mask if present
+    smask = extracted.get("smask", 0)
+
+    if smask:
+        base = pymupdf.Pixmap(image_bytes)
+        mask_data = document.extract_image(smask)["image"]
+        mask = pymupdf.Pixmap(mask_data)
+
+        # Remove existing alpha channels before combining
+        if base.alpha:
+            base = pymupdf.Pixmap(base, 0)
+
+        if mask.alpha:
+            mask = pymupdf.Pixmap(mask, 0)
+
+        # Ensure mask is grayscale
+        if mask.colorspace != pymupdf.csGRAY:
+            mask = pymupdf.Pixmap(pymupdf.csGRAY, mask)
+
+        # A PDF /SMask may have its own resolution; both map onto the same
+        # image square, so scale the mask, never the image.
+        if (mask.width, mask.height) != (base.width, base.height):
+            mask = pymupdf.Pixmap(mask, base.width, base.height)
+
+        image = pymupdf.Pixmap(base, mask)
+
+        return image.tobytes("png"), "image/png"
+
     ext = extracted["ext"].lower()
+    mime_type = "image/jpeg" if ext in {"jpg", "jpeg"} else f"image/{ext}"
 
-    mime_type = (
-        "image/jpeg"
-        if ext in {"jpg", "jpeg"}
-        else f"image/{ext}"
-    )
-
-    return extracted["image"], mime_type
-
+    return image_bytes, mime_type
 
 def _summarise_images(
     document: Any,
